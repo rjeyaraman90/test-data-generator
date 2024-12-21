@@ -1,0 +1,27 @@
+[
+    {
+        "name": "Kristina Wilson",
+        "email": "timothysimon@example.com",
+        "address": "03016 Clarke Tunnel Suite 721\nCatherineshire, CT 51221"
+    },
+    {
+        "name": "Trevor Floyd",
+        "email": "samuelbrown@example.net",
+        "address": "30257 Ann Tunnel Suite 366\nLake Kellyville, KY 25080"
+    },
+    {
+        "name": "Ryan Osborn",
+        "email": "brianhughes@example.com",
+        "address": "67965 Christensen Forge\nWest Mark, ND 19118"
+    },
+    {
+        "name": "Samantha Hammond",
+        "email": "johnsonwilliam@example.net",
+        "address": "761 Harold Island Suite 183\nWest Erik, FM 78627"
+    },
+    {
+        "name": "Jeffrey Johnson",
+        "email": "whitesarah@example.com",
+        "address": "987 Thomas Glens Suite 241\nAlexandershire, KY 21549"
+    }
+]

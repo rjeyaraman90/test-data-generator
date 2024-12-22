@@ -1,0 +1,16 @@
+{
+    "salesforce": {
+        "api_version": "v56.0",
+        "default_object": "Account",
+        "default_record_count": 5
+    },
+    "logging": {
+        "enable_verbose": false,
+        "log_file": "logs/app.log",
+        "log_level": "INFO"
+    },
+    "data_generation": {
+        "max_string_length": 255,
+        "default_related_object": "Contact"
+    }
+}

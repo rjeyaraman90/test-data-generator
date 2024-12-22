@@ -1,60 +1,62 @@
-import argparse
-import json
-from faker import Faker
+from src.auth import SalesforceAuth
+from src.metadata import SalesforceMetadata
+from src.data_generator import DataGenerator
+from src.record_inserter import RecordInserter
+from src.cli import CLI
 
-"""
-This method is used to define the basic CLI structure
---output/-o : specifies the output file for generated test data
---count/-c : specifies the number of test records to generate
---schema/-s : specifies the file path for test data schema
+def main():
+    # Step 1: Parse Command-Line Arguments
+    args = CLI.parse_arguments()
+    object_name = args.object
+    record_count = args.record_count
+    verbose = args.verbose
 
-:returns an object of user's CLI inputs
-"""
-def parse_args():
-    parser = argparse.ArgumentParser(description="Test Data Generator CLI Tool")
-    parser.add_argument("--output", "-o", type=str, default="data/test_data.json",
-                        help="Output file path for the generated data (default: data/test_data.json)")
-    parser.add_argument("--count", "-c", type=int, default=10,
-                        help="Number of test records to generate (default: 10)")
-    parser.add_argument("--schema", "-s", type=str, required=True,
-                        help="Path to the schema file defining the data structure")
-    return parser.parse_args()
+    if verbose:
+        print(f"Arguments received: object={object_name}, record_count={record_count}, verbose={verbose}")
 
-"""
-This method reads a JSON schema file and generates test data using faker library
-The loop runs for "count" times
-It creates an empty dictionary for each count and populates the test data 
-The created record is then appended to the test_data list
-"""
-def generate_test_data(schema_path, count):
-    fake = Faker()
+    # Step 2: Authenticate with Salesforce
+    print("Authenticating with Salesforce...")
+    auth = SalesforceAuth()
+    try:
+        token, instance_url = auth.authenticate()
+    except Exception as e:
+        print(f"Authentication failed: {e}")
+        return
 
-    with open(schema_path, 'r') as schema_file:
-        schema = json.load(schema_file)
+    if verbose:
+        print(f"Authenticated successfully. Token: {token}, Instance URL: {instance_url}")
 
-    test_data = []
-    for _ in range(count):
-        record = {}
-        for key, value in schema.items():
-            if hasattr(fake, value):
-                record[key] = getattr(fake, value)()
-            else:
-                record[key] = f"Unsupported field: {value}"
-        test_data.append(record)
-    return test_data
+    # Step 3: Fetch Metadata for the Target Object
+    print(f"Fetching metadata for Salesforce object: {object_name}...")
+    metadata = SalesforceMetadata(instance_url, token)
+    try:
+        object_metadata = metadata.fetch_metadata(object_name)
+    except Exception as e:
+        print(f"Failed to fetch metadata: {e}")
+        return
 
-"""
-This method is used to write the generated test data into a file
-"""
-def write_test_data_to_file(data, output_path):
+    # Parse field information from metadata
+    fields = {field["name"]: field["type"] for field in object_metadata["fields"]}
+    if verbose:
+        print(f"Fetched fields: {fields}")
 
-    with open(output_path, 'w') as output_file:
-        json.dump(data, output_file, indent=4)
-    print(f"Test data written to {output_path}")
+    # Step 4: Generate Fake Data
+    print(f"Generating {record_count} fake records for {object_name}...")
+    data_gen = DataGenerator()
+    fake_data = data_gen.generate_data(fields, record_count)
+    if verbose:
+        print(f"Generated data: {fake_data}")
+
+    # Step 5: Insert Records into Salesforce
+    print(f"Inserting records into Salesforce object: {object_name}...")
+    inserter = RecordInserter(instance_url, token)
+    try:
+        inserter.insert_records(object_name, fake_data)
+    except Exception as e:
+        print(f"Failed to insert records: {e}")
+        return
+
+    print("Records successfully inserted into Salesforce!")
 
 if __name__ == "__main__":
-    args = parse_args()
-    test_data = generate_test_data(args.schema, args.count)
-    write_test_data_to_file(test_data, args.output)
-
-
+    main()
